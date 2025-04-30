@@ -1,0 +1,124 @@
+#include "thingProperties.h"
+#include <DHT.h>
+
+#define DHTPIN 2        // Data pin connected to DHT22
+#define DHTTYPE DHT22   // DHT 22 (AM2302)
+
+DHT dht(DHTPIN, DHTTYPE);
+
+void setup() {
+  Serial.begin(9600);
+  delay(1500); // Allow time for serial monitor
+  
+  // Initialize cloud properties
+  initProperties();
+
+  // Connect to Arduino IoT Cloud
+  ArduinoCloud.begin(ArduinoIoTPreferredConnection);
+  setDebugMessageLevel(2);
+  ArduinoCloud.printDebugInfo();
+
+  // Initialize DHT22 sensor
+  dht.begin();
+}
+
+void loop() {
+  ArduinoCloud.update();
+
+  // Read temperature every 2 seconds
+  static unsigned long lastRead = 0;
+  if (millis() - lastRead > 2000) {
+    float t = dht.readTemperature();
+    
+    if (!isnan(t)) {
+      temperature = t; // Update cloud variable
+      Serial.print("Temperature: ");
+      Serial.print(t);
+      Serial.println(" °C");
+    } else {
+      Serial.println("Failed to read temperature!");
+    }
+    lastRead = millis();
+  }
+}
+
+// Required function for the cloud variable
+void onTemperatureChange() {
+  // Optional: handle dashboard-side changes if needed
+}
+
+
+
+---------------------------------------------------------------------------------------------------
+
+
+
+/*  In future if you want to scale this project by adding humidity as this sensor supprots humidity measuring as well. You can use this code.
+  
+  Arduino IoT Cloud Variables description
+
+  The following variables are automatically generated and updated when changes are made to the Thing
+
+  CloudRelativeHumidity humidity;
+  CloudTemperature temperature;
+
+  Variables which are marked as READ/WRITE in the Cloud Thing will also have functions
+  which are called when their values are changed from the Dashboard.
+  These functions are generated with the Thing and added at the end of this sketch.
+*/
+
+
+#include "arduino_secrets.h"
+#include "thingProperties.h"
+#include <DHT.h>
+#define DHTpin 2 // D2 on the DHT22
+#define DHTTYPE DHT22
+DHT dht(DHTpin,DHTTYPE);
+
+void setup() {
+  // Initialize serial and wait for port to open:
+  Serial.begin(9600);
+  // This delay gives the chance to wait for a Serial Monitor without blocking if none is found
+  delay(1500); 
+
+  // Defined in thingProperties.h
+  initProperties();
+
+  // Connect to Arduino IoT Cloud
+  ArduinoCloud.begin(ArduinoIoTPreferredConnection);
+  
+
+  setDebugMessageLevel(2);
+  ArduinoCloud.printDebugInfo();
+}
+
+void loop() {
+  ArduinoCloud.update();
+  // Your code here 
+     float h= dht.readHumidity();
+    Serial.print("h ");
+    Serial.println(h);
+    float t=dht.readTemperature(); 
+      Serial.print("t ");
+    Serial.println(t);
+    temperature = t;
+  humidity=h;
+    //message="Temperature = " + String (temperature)+"  Humidity = " + String(humidity);
+  
+}
+
+/*
+  Since Temperature is READ_WRITE variable, onTemperatureChange() is
+  executed every time a new value is received from IoT Cloud.
+*/
+void onTemperatureChange()  {
+  // Add your code here to act upon Temperature change
+}
+
+/*
+  Since Humidity is READ_WRITE variable, onHumidityChange() is
+  executed every time a new value is received from IoT Cloud.
+*/
+void onHumidityChange()  {
+  // Add your code here to act upon Humidity change
+}
